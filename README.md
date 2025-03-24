@@ -9,22 +9,22 @@ Jahren abgewartet und festgestellt, was aus den Startups jeweils geworden war, d
 akquiriert worden waren oder schliessen mussten.
 
 ## Aufgabe
-• Formalisiert die Aufgabe als *Klassifikations*- oder Regressionsaufgabe, d.h. legt fest, wie die
+- Formalisiert die Aufgabe als **Klassifikations**- oder Regressionsaufgabe, d.h. legt fest, wie die
 Instanzen, die Attribute und die Zielvariable bzw. das Klassenattribut definiert sind. Falls ihr
 neue Attribute definiert, beschreibt bitte, wie diese berechnet werden. Falls ihr Attribute
 aus den gegebenen Daten nicht verwendet, begründet bitte, warum nicht. Beschreibt bitte
 auch allfällige Typkonversionen, die ihr für bestehende Attributen vorschlagt!
-• Implementiert die Aufbereitung der Daten, z.B. in Tableau Prep oder in Orange oder Python.
+- Implementiert die Aufbereitung der Daten, z.B. in Tableau Prep oder in Orange oder Python.
 Die Aufbereitung der Daten kann die Verknüpfung verschiedener Daten beinhalten, die
 Berechnung neuer Attribute (inklusive Zielvariablen) usw.
-• Wählt einen geeigneten Klassifikations- bzw. Regressionsalgorithmus aus und wendet ihn
+- Wählt einen geeigneten Klassifikations- bzw. Regressionsalgorithmus aus und wendet ihn
 auf die Daten an. Natürlich könnt ihr auch mit mehreren Algorithmen experimentieren.
 Entscheidet euch am Ende für einen Algorithmus und begründet eure Wahl!
-• Falls ihr bestimmte Techniken wie Regularisierung, Over-/Undersampling oder
+- Falls ihr bestimmte Techniken wie Regularisierung, Over-/Undersampling oder
 Dimensionsreduktion anwendet, begründet dies bitte und beschreibt, wie ihr es umsetzt.
-• Beschreibt so gut wie möglich die Muster, die euer Algorithmus aus den Daten gelernt hat.
+- Beschreibt so gut wie möglich die Muster, die euer Algorithmus aus den Daten gelernt hat.
 Ordnet diese Muster nach ihrer Wichtigkeit für MyVC.
-• Erarbeitet eine geeignete Evaluationsstrategie, d.h. wählt eine Prozedur (z.B. Holdout oder
+- Erarbeitet eine geeignete Evaluationsstrategie, d.h. wählt eine Prozedur (z.B. Holdout oder
 Kreuzvalidierung), sowie ein zu optimierendes Mass aus (z.B. Accuracy, F-Measure, AUC oder
 Kostenmatrix). Begründet eure Wahl! Beschreibt dann, wie gut euer Algorithmus bezüglich
 des gewählten Evaluationsmasses abschneidet und was dies für die Anwendung bei MyVC
