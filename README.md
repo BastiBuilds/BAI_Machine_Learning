@@ -1,5 +1,5 @@
 # BAI_Machine_Learning
-Szenario
+## Szenario
 MyVC ist eine Venture Capital-Firma, die das Geld ihrer Kunden als Risikokapital in Start-ups in den
 USA investiert. Die Kernaufgabe von MyVC ist es abzuschätzen, welche Start-ups es schaffen werden,
 am Ende für eine hohe Summe gekauft zu werden. Dazu hat MyVC Daten aus der Vergangenheit
@@ -7,8 +7,9 @@ gesammelt und möchte nun den Erfolg zukünftiger Investments vorhersagen. Die D
 Startups wurden zunächst am Ende des Jahres 2014 gesammelt. Dann wurde ein Zeitraum von 5
 Jahren abgewartet und festgestellt, was aus den Startups jeweils geworden war, d.h. ob sie
 akquiriert worden waren oder schliessen mussten.
-Aufgabe
-• Formalisiert die Aufgabe als Klassifikations- oder Regressionsaufgabe, d.h. legt fest, wie die
+
+## Aufgabe
+• Formalisiert die Aufgabe als *Klassifikations*- oder Regressionsaufgabe, d.h. legt fest, wie die
 Instanzen, die Attribute und die Zielvariable bzw. das Klassenattribut definiert sind. Falls ihr
 neue Attribute definiert, beschreibt bitte, wie diese berechnet werden. Falls ihr Attribute
 aus den gegebenen Daten nicht verwendet, begründet bitte, warum nicht. Beschreibt bitte
@@ -28,7 +29,8 @@ Kreuzvalidierung), sowie ein zu optimierendes Mass aus (z.B. Accuracy, F-Measure
 Kostenmatrix). Begründet eure Wahl! Beschreibt dann, wie gut euer Algorithmus bezüglich
 des gewählten Evaluationsmasses abschneidet und was dies für die Anwendung bei MyVC
 bedeutet. Welchen ökonomischen Nutzen hat das gelernte Modell?
-Lieferobjekte
+
+## Lieferobjekte:
 Abzugeben sind die folgenden Lieferobjekte:
 - Eine Präsentation, welche die oben beschriebenen Punkte abdeckt, d.h. angefangen mit der
 Formalisierung der Aufgabe und der Definition und Begründung aller Attribute, über die
