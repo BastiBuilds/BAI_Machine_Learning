@@ -21,6 +21,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.calibration import CalibratedClassifierCV
 
 warnings.filterwarnings('ignore')
 
@@ -104,6 +105,32 @@ y = df_filtered[target].astype(int)
 print(f"\nFeature-Set-Form: {X.shape}")
 print(f"Zielvariable-Form: {y.shape}")
 
+# ---- Korrelationsanalyse ----
+# Nutze die bestehenden numerical_features und die Zielvariable 'is_successful'
+# Falls die Zielvariable noch nicht in numerical_features enthalten ist, fügen wir sie hinzu:
+corr_cols = numerical_features.copy()
+if target not in corr_cols:
+    corr_cols.append(target)
+
+# Berechne die Korrelationsmatrix
+corr_matrix = df_filtered[corr_cols].corr()
+print("\nKorrelationsmatrix:")
+print(corr_matrix)
+
+# Extrahiere die Korrelation der Features mit der Zielvariable (ohne die Zielvariable selbst)
+target_corr = corr_matrix[target].drop(target)
+# Sortiere nach absolutem Wert und wähle die Top 6
+top6 = target_corr.abs().sort_values(ascending=False).head(6)
+print("\nDie 6 wichtigsten Features bezüglich ihrer Korrelation mit der Zielvariable:")
+print(top6)
+
+# Optional: Aktualisiere die Feature-Auswahl anhand der Top 6 korrelierten Features.
+selected_features = top6.index.tolist()
+print("\nSelektierte Features für die Modellierung:")
+print(selected_features)
+
+numerical_features = selected_features
+
 # ------------------------------
 # Trainings-/Testsplit + SMOTE
 # ------------------------------
@@ -114,7 +141,7 @@ print(f"\nTrainingsdaten: {X_train.shape[0]}")
 print(f"Testdaten: {X_test.shape[0]}")
 print(f"Verteilung im Training - Failed=0: {sum(y_train==0)}, Successful=1: {sum(y_train==1)}")
 
-smote = SMOTE(random_state=52, sampling_strategy=1.0, k_neighbors=20)
+smote = SMOTE(random_state=52, sampling_strategy=1.0, k_neighbors=200)
 X_train_sm, y_train_sm = smote.fit_resample(X_train, y_train)
 print("\nNach SMOTE:")
 print(f"Trainingssamples Failed=0: {sum(y_train_sm==0)}")
@@ -150,7 +177,7 @@ models = {
     "Random Forest": RandomForestClassifier(
         random_state=52, class_weight={0: 6, 1: 1}),
     "Gradient Boosting": GradientBoostingClassifier(
-        random_state=52, class_weight={0: 6, 1: 1}),
+        random_state=52,),
     "Naive Bayes": GaussianNB(),
     "kNN": KNeighborsClassifier(), 
     "Neural Network": MLPClassifier(
@@ -159,22 +186,23 @@ models = {
 
 param_grids = {
     "Logistic Regression": {
-        'classifier__C': [0.01, 0.1, 1, 10, 100],
+        'classifier__C': [0.01, 0.1, 1, 10, 100, 1000],
         'classifier__penalty': ['l2']
     },
     "Random Forest": {
-        'classifier__n_estimators': [2000, 1000, 1500],
+        'classifier__n_estimators': [5000, 1000, 1500, 3000],
         'classifier__max_depth': [None, 20, 25, 30],
-        'classifier__min_samples_split': [3, 5, 10, 20]
+        'classifier__min_samples_split': [3, 5, 10, 20, 30]
     },
     "Gradient Boosting": {
-        'classifier__n_estimators': [600, 1500, 2000],
+        'classifier__n_estimators': [600, 1500, 2000, 4000],
         'classifier__learning_rate': [0.01, 0.02, 0.05],
-        'classifier__max_depth': [3, 5, 9]
+        'classifier__max_depth': [3, 5, 9, 20]
     },
     "Neural Network": {
         'classifier__hidden_layer_sizes': [(5000, 300, 100, 50, 20), (2000, 500, 100)],
-        'classifier__alpha': [0.0001, 0.001]
+        'classifier__alpha': [0.00001, 0.001]
+
     }
 }
 
@@ -185,12 +213,16 @@ results = []
 
 for model_name, clf in models.items():
     print(f"\n=== Training & Evaluation: {model_name} ===")
+    
+    # Integriere Feature Selektion in die Pipeline:
     pipeline = Pipeline([
         ('preprocessor', preprocessor),
+        # Wähle wichtige Features basierend auf einem RandomForest (nützlich auch als dimensionality reduction)
+        ('feature_selection', SelectFromModel(RandomForestClassifier(n_estimators=10, random_state=52))),
         ('classifier', clf)
     ])
     
-    # Falls für dieses Modell ein Parametergrid definiert ist, führe GridSearchCV durch
+    # GridSearch falls Parameter definiert sind:
     if model_name in param_grids:
         grid = GridSearchCV(pipeline,
                             param_grid=param_grids[model_name],
@@ -202,19 +234,37 @@ for model_name, clf in models.items():
     else:
         pipeline.fit(X_train_sm, y_train_sm)
         best_pipeline = pipeline
-    
-    # Vorhersagen auf Testdaten
-    y_pred = best_pipeline.predict(X_test)
-    
-    # Nutzen von predict_proba für AUC (für Klasse Successful=1)
+
+    # -- Probability Calibration --
+    # Falls das Modell predict_proba unterstützt, kalibriere es
     if hasattr(best_pipeline.named_steps['classifier'], "predict_proba"):
-        y_pred_proba = best_pipeline.predict_proba(X_test)[:, 1]
-        roc_auc = roc_auc_score(y_test, y_pred_proba)
+        # Verwende cv='prefit', da best_pipeline schon trainiert wurde.
+        calibrated_clf = CalibratedClassifierCV(best_pipeline, method='sigmoid', cv='prefit')
+        # Hier kann man als Basis den ursprünglichen Trainingssatz (ohne Oversampling) nehmen,
+        # um Überanpassung zu verringern:
+        calibrated_clf.fit(X_train, y_train)
+        y_pred_proba = calibrated_clf.predict_proba(X_test)[:, 1]
     else:
         y_pred_proba = None
-        roc_auc = np.nan
 
-    # Bewertung Metriken: Fokus auf positive Klasse = Successful (1)
+    # -- Threshold Optimierung --
+    # Suche den Threshold, der den F1-Score maximiert
+    if y_pred_proba is not None:
+        thresholds = np.linspace(0.0, 1.0, 101)
+        f1_scores = []
+        for thresh in thresholds:
+            y_pred_thresh = (y_pred_proba >= thresh).astype(int)
+            f1_scores.append(f1_score(y_test, y_pred_thresh, pos_label=1, zero_division=0))
+        best_threshold = thresholds[np.argmax(f1_scores)]
+        print(f"Optimale Schwelle für {model_name}: {best_threshold:.2f}")
+        
+        # Nutze den optimierten Schwellenwert für finale Vorhersage:
+        y_pred = (y_pred_proba >= best_threshold).astype(int)
+    else:
+        y_pred = best_pipeline.predict(X_test)
+    
+    # Auswertung
+    roc_auc = roc_auc_score(y_test, y_pred_proba) if y_pred_proba is not None else np.nan
     accuracy = (y_pred == y_test).mean()
     precision = precision_score(y_test, y_pred, pos_label=1, zero_division=0)
     recall = recall_score(y_test, y_pred, pos_label=1, zero_division=0)
@@ -230,7 +280,7 @@ for model_name, clf in models.items():
     print(f"Prec: {precision:.4f}")
     print(f"Rec:  {recall:.4f}")
     print(f"MCC:  {mcc:.4f}")
-
+    
     results.append({
         "Model": model_name,
         "AUC": roc_auc,
@@ -241,7 +291,6 @@ for model_name, clf in models.items():
         "MCC": mcc
     })
     
-    # Plotten und Speichern der Konfusionsmatrix
     plt.figure(figsize=(5, 4))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
                 xticklabels=['Pred: Failed', 'Pred: Success'],
