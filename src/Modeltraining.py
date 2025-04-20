@@ -1,6 +1,5 @@
 import os
 import warnings
-from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -20,6 +19,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from imblearn.pipeline import Pipeline as ImbPipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.calibration import CalibratedClassifierCV
 
@@ -34,7 +34,7 @@ data_dir = os.path.join(project_dir, 'data')
 results_dir = os.path.join(project_dir, 'results')
 os.makedirs(results_dir, exist_ok=True)
 
-file_path = os.path.join(data_dir, 'Exported_prepared_data_cleaned.csv')
+file_path = os.path.join(data_dir, 'my_vc_data_corrected.csv')
 print(f"Lade Daten aus {file_path}...")
 
 # ------------------------------
@@ -63,29 +63,39 @@ print("\nVerfügbare Spalten:")
 print(df.columns.tolist())
 
 # ------------------------------
-# Zielvariable: is_successful (1 = Successful, 0 = Failed)
+# Zielvariable: Is_Successful (1 = Successful, 0 = Failed)
 # ------------------------------
-# Direkt die Spalte "Is_Successful" verwenden
-if 'is_successful' not in df.columns:
+if 'Is_Successful' not in df.columns:
     raise ValueError("Keine 'Is_Successful'-Spalte gefunden.")
 else:
-    target = 'is_successful'
+    target = 'Is_Successful'
     df[target] = df[target].astype(int)
 
 # ------------------------------
-# Feature-Auswahl
+# Feature-Auswahl basierend auf neuer CSV
 # ------------------------------
 numerical_candidates = [
-    'Fundingtotal', 'Fundingrounds', 'NumContributors', 'NumPartners', 
-    'company_age_years', 'funding_duration_years', 'funding_rounds_per_year', 
-    'funding_per_contributor', 'amount_milestones', 'milestones_per_year',
-    'Fundingtotal_log', 'NumContributors_log', 'NumPartners_log', 
-    'funding_per_contributor_log', 'avg_funding_per_round_log'
+    'amount_milestones_corrected',
+    'age_last_funding',
+    'age_first_funding',
+    'is_first_funding_the_biggest_funding',
+    'First_funding_amount',
+    'biggest_funding_amount_share_of_total_funding_%',
+    'biggest_funding_amount',
+    'Funding_rounds',
+    'days_from_first_to_last_milestone',
+    'average_days_per_milestone',
+    'Funding_total',
+    'funding_duration_days',
+    'days_per_funding',
+    'average_funding_size',
+    'NumContributors',
+    'NumPartners'
 ]
-categorical_candidates = ['state_grouped', 'BusinessField_grouped']
+categorical_candidates = ['state', 'BusinessField']
 
 available_columns = set(df.columns)
-numerical_features = [f for f in numerical_candidates if f in available_columns]
+numerical_features   = [f for f in numerical_candidates   if f in available_columns]
 categorical_features = [f for f in categorical_candidates if f in available_columns]
 
 print("\nNumerische Features:", numerical_features)
@@ -132,7 +142,7 @@ print(selected_features)
 numerical_features = selected_features
 
 # ------------------------------
-# Trainings-/Testsplit + SMOTE
+# Trainings-/Testsplit (SMOTE hier nicht mehr manuell)
 # ------------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.25, random_state=52, stratify=y
@@ -141,11 +151,10 @@ print(f"\nTrainingsdaten: {X_train.shape[0]}")
 print(f"Testdaten: {X_test.shape[0]}")
 print(f"Verteilung im Training - Failed=0: {sum(y_train==0)}, Successful=1: {sum(y_train==1)}")
 
-smote = SMOTE(random_state=52, sampling_strategy=1.0, k_neighbors=200)
-X_train_sm, y_train_sm = smote.fit_resample(X_train, y_train)
-print("\nNach SMOTE:")
-print(f"Trainingssamples Failed=0: {sum(y_train_sm==0)}")
-print(f"Trainingssamples Successful=1: {sum(y_train_sm==1)}")
+# --- Bestimme k_neighbors für SMOTE so, dass es < minority class size ist ---
+minority_count = y_train.value_counts().min()
+smote_k = min(5, minority_count - 1) if minority_count > 1 else 1
+print(f"Verwende SMOTE mit k_neighbors={smote_k}")
 
 # ------------------------------
 # Preprocessing-Pipeline
@@ -162,7 +171,7 @@ transformers = [
 if len(categorical_features) > 0:
     categorical_transformer = Pipeline([
         ('imputer', SimpleImputer(strategy='constant', fill_value='Unknown')),
-        ('onehot', OneHotEncoder(handle_unknown='ignore'))
+        ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
     ])
     transformers.append(('cat', categorical_transformer, categorical_features))
 
@@ -214,12 +223,13 @@ results = []
 for model_name, clf in models.items():
     print(f"\n=== Training & Evaluation: {model_name} ===")
     
-    # Integriere Feature Selektion in die Pipeline:
-    pipeline = Pipeline([
+    pipeline = ImbPipeline([
         ('preprocessor', preprocessor),
-        # Wähle wichtige Features basierend auf einem RandomForest (nützlich auch als dimensionality reduction)
+        ('smote', SMOTE(random_state=52,
+                        sampling_strategy=1.0,
+                        k_neighbors=smote_k)),
         ('feature_selection', SelectFromModel(RandomForestClassifier(n_estimators=10, random_state=52))),
-        ('classifier', clf)
+        ('classifier',  clf)
     ])
     
     # GridSearch falls Parameter definiert sind:
@@ -228,11 +238,11 @@ for model_name, clf in models.items():
                             param_grid=param_grids[model_name],
                             cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=52),
                             scoring='f1', n_jobs=-1)
-        grid.fit(X_train_sm, y_train_sm)
+        grid.fit(X_train, y_train)
         best_pipeline = grid.best_estimator_
         print(f"Beste Parameter für {model_name}:", grid.best_params_)
     else:
-        pipeline.fit(X_train_sm, y_train_sm)
+        pipeline.fit(X_train, y_train)
         best_pipeline = pipeline
 
     # -- Probability Calibration --
@@ -248,18 +258,33 @@ for model_name, clf in models.items():
         y_pred_proba = None
 
     # -- Threshold Optimierung --
-    # Suche den Threshold, der den F1-Score maximiert
     if y_pred_proba is not None:
+        # F1-basierte Threshold-Optimierung (bestehende Methode)
         thresholds = np.linspace(0.0, 1.0, 101)
         f1_scores = []
         for thresh in thresholds:
             y_pred_thresh = (y_pred_proba >= thresh).astype(int)
             f1_scores.append(f1_score(y_test, y_pred_thresh, pos_label=1, zero_division=0))
-        best_threshold = thresholds[np.argmax(f1_scores)]
-        print(f"Optimale Schwelle für {model_name}: {best_threshold:.2f}")
+        best_threshold_f1 = thresholds[np.argmax(f1_scores)]
+        print(f"Optimale Schwelle (F1) für {model_name}: {best_threshold_f1:.2f}")
         
-        # Nutze den optimierten Schwellenwert für finale Vorhersage:
-        y_pred = (y_pred_proba >= best_threshold).astype(int)
+        # Zusätzlich: Optimierung mittels Youden-Index (als Proxy für AUC-Optimierung)
+        best_threshold_youden = 0.5
+        best_youden = -np.inf
+        for thresh in thresholds:
+            y_pred_thresh = (y_pred_proba >= thresh).astype(int)
+            tn, fp, fn, tp = confusion_matrix(y_test, y_pred_thresh).ravel()
+            sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+            youden_index = sensitivity + specificity - 1
+            if youden_index > best_youden:
+                best_youden = youden_index
+                best_threshold_youden = thresh
+        print(f"Optimale Schwelle (Youden) für {model_name}: {best_threshold_youden:.2f}")
+        
+        # Hier entscheidest du, welchen Threshold du für die finale Vorhersage verwenden möchtest.
+        # Z.B. Verwendung des F1-optimierten Thresholds:
+        y_pred = (y_pred_proba >= best_threshold_f1).astype(int)
     else:
         y_pred = best_pipeline.predict(X_test)
     
