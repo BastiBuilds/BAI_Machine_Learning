@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val
 from sklearn.metrics import roc_auc_score, f1_score, accuracy_score, precision_score, recall_score, confusion_matrix, classification_report
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -32,36 +34,47 @@ df = df.dropna(subset=[target])
 X = df[features]
 y = df[target].astype(int)
 
-# Kategorische Features encoden
 categorical = ['BusinessField']
 numeric = [f for f in features if f not in categorical]
 
-# Imputation und Scaling für numerische Features
-num_imputer = SimpleImputer(strategy='mean')
-X_num = pd.DataFrame(num_imputer.fit_transform(X[numeric]), columns=numeric)
+# Pipeline für numerische Features
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='mean')),
+    ('scaler', StandardScaler())
+])
 
-# Imputation und OneHot-Encoding für kategorische Features
-cat_imputer = SimpleImputer(strategy='most_frequent')
-X_cat = pd.DataFrame(cat_imputer.fit_transform(X[categorical]), columns=categorical)
-X_cat = pd.get_dummies(X_cat, columns=categorical)
+# Pipeline für kategorische Features
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
 
-# Kombinieren
-X_processed = pd.concat([X_num, X_cat], axis=1)
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X_processed)
+# Kombiniere alles in einem ColumnTransformer
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric),
+        ('cat', categorical_transformer, categorical)
+    ]
+)
 
-# Cross-Validation Setup
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+# Komplette Pipeline
 rf = RandomForestClassifier(
     n_estimators=1000,
     max_depth=10,
     min_samples_split=5,
-    random_state=42
+    random_state=12
 )
+pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', rf)
+])
+
+# Cross-Validation Setup
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
 # Cross-validated predictions
-y_proba = cross_val_predict(rf, X_scaled, y, cv=cv, method='predict_proba')[:, 1]
-y_pred = (y_proba >= 0.6).astype(int)  # Schwelle auf 0.6 gesetzt
+y_proba = cross_val_predict(pipeline, X, y, cv=cv, method='predict_proba')[:, 1]
+y_pred = (y_proba >= 0.65).astype(int)
 
 auc = roc_auc_score(y, y_proba)
 f1 = f1_score(y, y_pred)
