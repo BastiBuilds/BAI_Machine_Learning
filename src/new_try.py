@@ -10,6 +10,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 import matplotlib.pyplot as plt
 import seaborn as sns
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
 
 # Daten laden
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -64,21 +66,26 @@ rf = RandomForestClassifier(
     min_samples_split=5,
     random_state=12
 )
-pipeline = Pipeline(steps=[
+# Instantiate SMOTE
+smote = SMOTE(random_state=50)
+
+# Modify the pipeline to use ImbPipeline and include SMOTE
+pipeline = ImbPipeline(steps=[  
     ('preprocessor', preprocessor),
+    ('smote', smote), 
     ('classifier', rf)
 ])
 
 # Cross-Validation Setup
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=50)
 
 # Cross-validated predictions
 y_proba = cross_val_predict(pipeline, X, y, cv=cv, method='predict_proba')[:, 1]
 y_pred = (y_proba >= 0.65).astype(int)
 
-auc = roc_auc_score(y, y_proba)
-f1 = f1_score(y, y_pred)
-acc = accuracy_score(y, y_pred)
+auc = roc_auc_score(y, y_proba)  
+f1 = f1_score(y, y_pred) 
+acc = accuracy_score(y, y_pred)  
 prec = precision_score(y, y_pred)
 rec = recall_score(y, y_pred)
 
