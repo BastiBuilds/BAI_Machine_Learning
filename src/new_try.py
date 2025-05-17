@@ -10,25 +10,23 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 import matplotlib.pyplot as plt
 import seaborn as sns
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline as ImbPipeline
 
-# Daten laden
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(current_dir)
 data_dir = os.path.join(project_dir, 'data')
 file_path = os.path.join(data_dir, 'my_vc_data.csv')
 df = pd.read_csv(file_path)
 
-# Features und Zielvariable
 features = [
-    'NumPartners',
-    'NumContributors',
+    'got_funding_during_recession',
     'amount_milestones_corrected',
-    'BusinessField',
-    'Funding_total',
+    'is_founding_year_recession_year',
+    'NumContributors',
+    'NumPartners',
     'biggest_funding_amount',
-    'founding_year'
+    'age_2014_in_years',
+    'BusinessField',
+    'Funding_total'
 ]
 target = 'Is_Successful'
 
@@ -39,49 +37,31 @@ y = df[target].astype(int)
 categorical = ['BusinessField']
 numeric = [f for f in features if f not in categorical]
 
-# Pipeline für numerische Features
-numeric_transformer = Pipeline(steps=[
-    ('imputer', SimpleImputer(strategy='mean')),
-    ('scaler', StandardScaler())
-])
+categorical_transformer = OneHotEncoder(handle_unknown='ignore')
 
-# Pipeline für kategorische Features
-categorical_transformer = Pipeline(steps=[
-    ('imputer', SimpleImputer(strategy='most_frequent')),
-    ('onehot', OneHotEncoder(handle_unknown='ignore'))
-])
-
-# Kombiniere alles in einem ColumnTransformer
 preprocessor = ColumnTransformer(
     transformers=[
-        ('num', numeric_transformer, numeric),
         ('cat', categorical_transformer, categorical)
-    ]
+    ],
+    remainder='passthrough'
 )
 
-# Komplette Pipeline
 rf = RandomForestClassifier(
     n_estimators=1000,
     max_depth=10,
     min_samples_split=5,
-    random_state=12
+    random_state=25
 )
-# Instantiate SMOTE
-smote = SMOTE(random_state=50)
 
-# Modify the pipeline to use ImbPipeline and include SMOTE
-pipeline = ImbPipeline(steps=[  
+pipeline = Pipeline(steps=[  
     ('preprocessor', preprocessor),
-    ('smote', smote), 
     ('classifier', rf)
 ])
 
-# Cross-Validation Setup
 cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=50)
 
-# Cross-validated predictions
 y_proba = cross_val_predict(pipeline, X, y, cv=cv, method='predict_proba')[:, 1]
-y_pred = (y_proba >= 0.65).astype(int)
+y_pred = (y_proba >= 0.58).astype(int)
 
 auc = roc_auc_score(y, y_proba)  
 f1 = f1_score(y, y_pred) 
@@ -97,7 +77,6 @@ print(f"Rec:  {rec:.4f}")
 print("\nClassification Report:")
 print(classification_report(y, y_pred))
 
-# Confusion Matrix
 cm = confusion_matrix(y, y_pred)
 plt.figure(figsize=(6, 5))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
