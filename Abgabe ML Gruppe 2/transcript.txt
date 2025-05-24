@@ -1,0 +1,49 @@
+Die Ausgangslage heutzutage scheitern die Startups relativ schnell und häufig die Entwicklung dieser ist noch schwer vorhersehbar und viele Investoren Investoren haben daher sehr viele Fehlinvestitionen.
+Und verlieren einen Großteil ihres Kapitals dabei bzw ihres eingesetzten Kapitals.
+Doch wir haben die Lösung mit einer 83 Prozentigen Volksquote bei unserem Datensatz können wir hier fällen.
+Investitionen halbieren und Ihnen 50% mehr gewinnen garantieren.
+Wie sind wir vorangegangen beziehungsweise unser Ansatz?
+Wir haben die Start UPS klassifiziert, in erfolgreich oder nicht?
+Wir haben uns Modell mit ihren Daten trainiert und es erkennt und lernt.
+Dabei musste und kombiniert dabei auch Merkmale wie Partner, die finanzieren oder auch die Branche, indem die Sorbs tätig sind.
+Wir liefen dabei eine wichtige Entscheidungshilfe für Venture Capital Investments und Investoren.
+Hier einen kleinen Kursmatrix.
+Wir gehen davon aus, bei uns vom Datensatz, dass sie 100 Investitionen tätigen jeweils 5000000 US Dollar, wenn sie dabei blind investiert hätten, hätten sie 35 fällen Investitionen gehabt.
+Und eine Rendite von circa 765000000 US Dollar Gewinn erzielt, gehen auch davon aus, dass beim Verlust 120% ihres eingesetzten Kapitals verlieren davon sind 80% der sofortige Verlust und weitere 40% kommen darauf, wie der Delicience Betriebskosten et cetera.
+Bei einem erfolgreichen Investment haben sie eine Rendite von circa dem dreifachen oder auch 300% Adventure IQ.
+Können wir ihre Fehlinvestition halbieren?
+Und sie können dabei auch einen Gewinn von über 1,1 Milliarden US Dollar verzieren.
+
+Ebenso wollten wir die Optimierung anhand der Kostenmatrix machen, denn es ist wichtig, dass wir.
+Wenig falls Negatives haben, denn mit jeder verpassten Chance haben wir eine verpasste Chance von 300% Rendite und mit einem Volls negativ haben wir aber nur in Anführungszeichen eine Einbuße von 120%.
+Zudem ist es auch wichtig, dass wir auf den F One Score geschaut haben, genau um solche Sachen wie die Force Negatives und Forex Positive.
+Ein ein Grenzen können.
+Genau so haben wir dann einen eine hohe Wiedererkennungsrate, welche natürlich wünschenswert wäre.
+Zudem haben wir auch Prost Validation eingebaut, für eine maximale Stabilität in dem Modell.
+Zoom Feature Engineering Wir haben einige.
+Objekte wegen Data League gelöscht wie Datumswerte oder Koordinaten oder solche Dinge ebenso haben wir schlussendlich ein Resultat mit 24 Features.
+Von den 24 Features nutzen wir für unser Modell effektiv.
+9 Features und für den neuen Features haben wir 5 neu erstellt, welche wichtig sind.
+Und zudem haben wir auch Unternehmen ohne Werte komplett entfernt, das heißt, unser Datensatz ist etwas geringer als der Datensatz, welche, welcher wir zur Verfügung zur Verfügung gestellt bekommen haben.
+Zur Feature Selection, da haben wir uns ganz nach dem Motto gerichtet Qualität ist besser als Quantität, wie ich schon zuvor sagte.
+Wir haben neuen Features, diese Features könnt ihr hier in der Tabelle sehen.
+Sortiert anhand des AOC Einflusses und da kann man gut sehen, wieviel Einfluss die jeweilige.
+Das jeweilige Feature hat, da haben wir Number als erstes an erster Stelle mit einem Einfluss von 0,1.
+Währenddessen wir aber auch schwächere Features wie zum Beispiel Godfounding doing resession haben, welche das ganze Modell stabilisieren.
+Wir haben jetzt nur 9 Features genommen aus dem Grund da sehr viele Features relativ stark korrelieren oder korreliert, haben ZB funding total mit Biggest realing in Mount wie wir oben rechts sehen können und deshalb haben wir uns auf diese beschränkt.
+
+Das liegt auf der Hand.
+Diese ersten beiden Feststellungen, was dann doch schon deutlich interessanter ist, ist eigentlich das ältere Startups erfolgreicher werden also solche, die bei 2014 wo wir diesen Datensatz gezogen haben, diese.
+Erfolgreicher, aber sehr alte Startups waren kaum erfolgreich.
+Also wie man sich vorstellen kann, unternehmen, die 30 Jahre alt waren, sind, waren eigentlich nie erfolgreich.
+Serge hat den Nischenbarsch, waren auch selten erfolgreich.
+Also wo das Business Field als Order klassifiziert wurde oder solche Dino sehr wenige Werte haben, sind tendenziell auch wenig erfolgreich.
+Dann wohlhabende Bundesstaaten führen eher zu Erfolg als ärmere Bundesstaaten in Bezug auf das Bruttoinlandprodukt pro Kopf, also dann pro Bundesstaat der Waldstadt, setzt natürlich deutlich vorne, die haben auch Top Universität, das spielt natürlich auch noch Indikaten für diese Bundesstaaten.
+Eine letzte Feststellung, die wir gemacht haben, jetzt nicht unbedingt in Bezug auf das Modell, sondern mehr darauf allgemein mehr Partner führen zu mehr erreichten Milestones also das Wichtigste, was wir festgestellt haben, ist das Netzwerk ist wichtiger als das Geld und das Geld ist wichtiger als die Branche und der Ort.
+Dann noch zum Schluss einen kurzen Vergleich mit der Konstante also, was wir für eine Konstante würde einfach in alle im Unternehmen investieren, also blind investieren und wir haben jetzt ausgewertet.
+Wie groß wäre die Rendite pro Unternehmen, die wir vorgeschlagen bekommen haben, also nicht pro Investition, sondern pro Vorschlag, den wir erhalten oder den sie erhalten?
+Mit unserem Random Forest Modell erzielen sie 166% Rendite pro Unternehmen und müssen weniger Kapital binden, weil sie viel weniger Fehlinvestition haben und können sich abheben von der Konkurrenz, weil sie deutlich weniger Investitionen haben.
+Hingegen mit einer Konstante oder mit einem mit einem blinder Investition an sie nur 155% Rendite pro Unternehmen.
+Und wie gesagt eine deutlichere Kapitalbildung und können sich nicht abheben von der Konkurrenz.
+Und genau deshalb empfehlen wir Ihnen mit Strategy mit unserem Produkt Venture IQ zu investieren.
+Vielen Dank, dass sie uns diese Gelegenheit geboten haben.
